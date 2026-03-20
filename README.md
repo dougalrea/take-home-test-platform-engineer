@@ -1,50 +1,65 @@
-# EKS Cluster Decommissioning — Design & Automation Task
+# Platform Engineer Take-Home Test
 
-## Context
-Our EKS clusters are provisioned by the attached Terraform module. Each AWS account
-gets one EKS cluster. Some of those clusters are no longer needed and should be
-decommissioned — we do not want to pay for empty infrastructure.
+## Overview
 
-Assume decommissioning may happen **1-2 times per month**, and (if possible) we want
-to avoid our engineers performing repetitive manual tasks. **We prioritise automation
-wherever possible.**
+This task is intended to be timeboxed to **maximum 2 hours**. In this time window, feel free to pick one or two scenarios from the list presented below. 
 
-## Your Task
-1. **Investigate** the Terraform configuration and understand how EKS clusters are provisioned
-2. **Identify** what infrastructure exists per account (EKS, Karpenter, Helm, RDS, etc.)
-3. **Examine** the existing `account_state` variable and partial decommissioning logic
-4. **Identify gaps** — what currently breaks or is missing if you try to fully decommission
-5. **Propose a decommissioning plan**, covering:
-   - Terraform code changes needed to safely tear down an account's EKS infrastructure
-   - Destroy ordering for Kubernetes resources (Helm, CRDs, NodePools, etc.)
-   - How the Kubernetes provider should handle a cluster that may be destroyed
-   - CI/CD pipeline changes to reduce manual toil
-6. **Design automation** — given this happens 1-2x/month, propose how to minimise repetitive work
+### Your Task
 
-## Provided Materials
-- `terraform/modules/eks-cluster/` — EKS cluster Terraform module
-- `terraform/modules/eks-karpenter/` — Karpenter controller module
-- `terraform/modules/eks-karpenter-nodeclass/` — Karpenter EC2 node class module
-- `terraform/eks-cluster.tf` — Root-level EKS cluster instantiation
-- `terraform/eks-controller-karpenter.tf` — Root-level Karpenter wiring (NodePools, NodeClasses)
-- `terraform/eks-auth.tf` — Kubernetes RBAC / aws-auth configmap setup
-- `terraform/main.tf` — Provider config and decommissioning locals
-- `terraform/variables.tf` — Root variable definitions
-- `terraform/versions.tf` — Provider requirements
-- `var-files/` — Per-account .tfvars files (mix of active and decommissioned)
-- `.github/workflows/` — CI/CD pipeline (3 workflow files)
+1. **Analyze the scenario** - prepare any questions you may need to ask before deciding on the right solution (think about technical and non-technical stakeholders)
+2. **Propose a technical brief** addressing:
+   - How can this requirement be achieved?
+   - What are the assumptions you've made?
+   - What questions/clarifications are needed?
+   - Which parts of the proposal are optional and depend on those answers?
+   - What are the strengths and weaknesses of the proposed solution?
 
-## Architecture Overview
-- Multi-account AWS Organization (~17 prod accounts + test + staging)
-- 1 EKS cluster per account (Fargate for system pods + Karpenter for EC2 workloads)
-- Karpenter with 2 node pools: `default` (general compute) and `metaflow` (ML workloads)
-- AWS Load Balancer Controller, Argo Workflows, Metaflow services on each cluster
-- Per-account configuration via `.tfvars` files
-- GitHub Actions CI/CD: PR → plan all accounts; merge → sequential apply
-- Partial decommissioning mechanism via `account_state` variable
+Be prepared to discuss your solution in the technical interview, with extra questions, requirements or "what if…" scenarios being added.
 
-## Hints
-- Look carefully at what happens to the Kubernetes provider when the cluster goes away
-- Consider the destroy ordering of Helm releases that depend on each other's webhooks
-- Think about what resources are always created vs conditionally created
-- The CI/CD workflow matrices are hardcoded — what happens as accounts come and go?
+---
+
+## Scenarios
+
+### [Scenario 1: AWS Backup Cost Optimization](task1/)
+
+**Context:** The business is concerned about the ongoing AWS bill. After superficial investigation, it was discovered backups drive a significant proportion of the spending.
+
+**Materials provided:**
+- Spreadsheets with backup cost summary across 2-3 AWS accounts
+- Terraform module describing the existing backup policy
+
+**Your objective:** Investigate the situation, propose possible solutions to lower the cost, think about tradeoffs and decisions the business can take to lower the cost.
+
+📁 **[View Task 1 details →](task1/README.md)**
+
+---
+
+### [Scenario 2: EKS Cluster Decommissioning](task2/)
+
+**Context:** Our EKS clusters are created by the attached EKS terraform module. Some of those clusters are no longer needed and should be decommissioned - we do not want to pay for empty infrastructure.
+
+**Assumptions:**
+- Decommissioning may happen 1-2 times a month
+- We want to avoid engineers performing repetitive manual tasks
+- We prioritize automation wherever possible
+
+**Materials provided:**
+- Terraform module describing the existing EKS setup
+- Variable files for multiple partner accounts
+
+**Your objective:** Look at the attached terraform repository that provisions our EKS clusters and make a plan regarding the ways we should proceed.
+
+📁 **[View Task 2 details →](task2/README.md)**
+
+---
+
+## Submission Guidelines
+
+Please prepare your solution as a written document that includes:
+- Your analysis of the chosen scenario(s)
+- Questions for stakeholders
+- Technical solution proposal
+- Trade-offs and considerations
+- Any assumptions made
+
+Good luck! 🚀
