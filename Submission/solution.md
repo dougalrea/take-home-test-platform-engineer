@@ -9,7 +9,7 @@
 | **EKS Cluster** | `module.eks_cluster` → `module.eks` | Never destroyed via `account_decommissioned` |
 | **EKS access entries** | `aws_eks_access_entry.terraform_admin` | Admin role association |
 | **SG rules (EC2↔Fargate)** | `aws_security_group_rule.*` | 5 rules for cross-plane comms |
-| **Karpenter IAM Role** | `aws_iam_role.karpenter_controller` | No count guard — survives decommission |
+| **Karpenter IAM Role** | `aws_iam_role.karpenter_controller` | No count guard |
 | **Karpenter IAM Policy** | `aws_iam_policy.karpenter_controller_iam_role` | No count guard |
 | **Karpenter SQS queue** | `module.karpenter_sqs` | No count guard |
 | **EC2 Spot service-linked role** | `aws_iam_service_linked_role.ec2_spot` | Shared account-wide resource |
