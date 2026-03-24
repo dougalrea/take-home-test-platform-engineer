@@ -40,10 +40,10 @@
 
 The account_state variable is defined at the partner account level and must be either 'pre-commissioned', 'commissioned', 'pre-decommissioned' or 'decommissioned'. The `account_decommissioned` variable is defined dynamically in local vars depending on account_state as follows:
 
-"pre-commissioned"  ──►  account_decommissioned = true
-"commissioned"      ──►  account_decommissioned = false  (NodePool consolidateAfter = 60m / 5m)
-"pre-decommissioned"──►  account_decommissioned = false  (NodePool consolidateAfter = 1m / 1m)
-"decommissioned"    ──►  account_decommissioned = true
+- "pre-commissioned"  ->  account_decommissioned = true
+- "commissioned"      ->  account_decommissioned = false  (NodePool consolidateAfter = 60m / 5m)
+- "pre-decommissioned"->  account_decommissioned = false  (NodePool consolidateAfter = 1m / 1m)
+- "decommissioned"    ->  account_decommissioned = true
 
 Intermediate state between commissioned and decomissioned is controlled via `pre-decommissioned` - in this state (and indeed any state besides `commissioned`) Karpenter nodes are consolidated (using consolidateAfter → 1 minute) so EC2 worker nodes drain before the Helm/CRD EKS resources are removed. The count gate that destroys resources when `account_decommissioned = true` only comes into effect when account_state is `decommissioned`.
 
@@ -95,7 +95,7 @@ Currently, there is also no enforcement to require progression from commissioned
 ## 2. Questions for stakeholders
 - Are there any resources either within kubernetes or the AWS account as a whole which must be retained beyond account decommissioning? Eg any application/node logs, cloudtrail event histories, config maps etc... Or can the AWS account be nuked in its entirety either immediately or after a cool-down window when decommissioned?
 - Metaflow DB, S3 buckets, cloudwatch log groups aren't visible in this codebase, do any of them require retention beyond decommissioning?
-- partner4 tfvars features a `metaflow_db_snapshot_identifier` - was this a final snapshot of the DB before decommissioning, was it generated automatically or manually, and where is it stored? Does this prevent shut down of the account? This 
+- partner4 tfvars features a `metaflow_db_snapshot_identifier` - was this a final snapshot of the DB before decommissioning, was it generated automatically or manually, and where is it stored? Does this prevent shut down of the account or will it be exported to another account?
 
 ## 3. Technical Solution Proposal
 
