@@ -57,6 +57,7 @@ resource "helm_release" "karpenter" {
 
 module "karpenter_sqs" {
   # We're using this module to create the SQS queue used by the Karpenter application.
+  count   = var.account_decommissioned ? 0 : 1
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
   version = "~> 20.0"
 

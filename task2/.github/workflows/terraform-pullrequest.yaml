@@ -74,21 +74,36 @@ jobs:
     secrets:
       terraform_pat: ${{ secrets.TERRAFORM_PAT }}
 
+  discover-accounts:
+    runs-on: ubuntu-latest
+    outputs:
+      prod_partners: ${{ steps.discover-active-accounts.outputs.prod_partners }}
+    steps: # TODO: add main account to this matrix also
+      - id: discover-active-accounts
+        name: Discover active partner accounts
+        run: |
+          # Output JSON array of non-decommissioned partner accounts
+          partners=$(
+            for f in var-files/workloads.prod.partner*.tfvars; do
+              name=$(basename "$f" .tfvars | sed 's/workloads\.prod\.//')
+              state=$(grep '^account_state' "$f" | awk -F'"' '{print $2}')
+              id=$(grep '^main_aws_account_id' "$f" | awk -F'"' '{print $2}')
+              if [ "$state" != "decommissioned" ] && [ "$state" != "pre-commissioned" ]; then
+                echo "{\"name\":\"$name\",\"id\":\"$id\",\"region\":\"eu-west-1\"}"
+              fi
+            done | jq -sc '.'
+          ) 
+          echo "prod_partners=$partners" >> "$GITHUB_OUTPUT"
 
   tf-plan-prod:
+    needs: discover-accounts
     strategy:
       fail-fast: false
       matrix:
         account_env: [
           "prod"
         ]
-        account: [
-          { name: "main", id: "5555555555", region: "eu-west-1"},
-          { name: "partner1", id: "1234567890", region: "eu-west-1"},
-          { name: "partner2", id: "2234567890", region: "eu-west-1"},
-          { name: "partner3", id: "3234567890", region: "eu-west-1"},
-          { name: "partner4", id: "4234567890", region: "eu-west-1"}
-        ]
+        account: ${{ fromJson(needs.discover-accounts.outputs.prod_partners) }}
     if: github.event_name == 'pull_request' # plan prod on pull request
     uses: ./.github/workflows/terraform-action.yaml
     concurrency:

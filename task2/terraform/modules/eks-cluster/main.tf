@@ -35,6 +35,7 @@ locals {
 }
 
 module "eks" {
+  count   = var.account_decommissioned ? 0 : 1
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
 
@@ -91,6 +92,7 @@ resource "aws_eks_access_entry" "terraform_admin" {
   cluster_name  = module.eks.cluster_name
   principal_arn = var.kubernetes_admin_role_arn
   type          = "STANDARD"
+  depends_on    = [ module.eks ]
 }
 
 resource "aws_eks_access_policy_association" "terraform_admin" {
@@ -101,11 +103,14 @@ resource "aws_eks_access_policy_association" "terraform_admin" {
   access_scope {
     type = "cluster"
   }
+  depends_on = [ module.eks ]
+
 }
 
 # Would have ideally used 'aws_vpc_security_group_egress_rule' and 'aws_vpc_security_group_ingress_rule' resources.
 # However the TF documentation states NOT to mix these with the 'aws_security_group_rule' resource, which the EKS module uses
 resource "aws_security_group_rule" "ec2_node_egress_fargate_node" {
+  count                    = var.account_decommissioned ? 0 : 1
   security_group_id        = module.eks.node_security_group_id
   type                     = "egress"
   from_port                = 0
@@ -116,6 +121,7 @@ resource "aws_security_group_rule" "ec2_node_egress_fargate_node" {
 }
 
 resource "aws_security_group_rule" "ec2_node_ingress_fargate_node" {
+  count                    = var.account_decommissioned ? 0 : 1
   security_group_id        = module.eks.node_security_group_id
   type                     = "ingress"
   from_port                = 0
@@ -126,6 +132,7 @@ resource "aws_security_group_rule" "ec2_node_ingress_fargate_node" {
 }
 
 resource "aws_security_group_rule" "fargate_node_egress_ec2_node" {
+  count                    = var.account_decommissioned ? 0 : 1
   security_group_id        = module.eks.cluster_primary_security_group_id
   type                     = "egress"
   from_port                = 0
@@ -136,6 +143,7 @@ resource "aws_security_group_rule" "fargate_node_egress_ec2_node" {
 }
 
 resource "aws_security_group_rule" "fargate_node_ingress_ec2_node" {
+  count                    = var.account_decommissioned ? 0 : 1
   security_group_id        = module.eks.cluster_primary_security_group_id
   type                     = "ingress"
   from_port                = 0
@@ -150,6 +158,7 @@ resource "aws_security_group_rule" "fargate_node_ingress_ec2_node" {
 # creating the necessary rules for all the inter-pod communication between EC2 nodes.
 # We just don't have the time at the moment to test behaviour with this rule removed.
 resource "aws_security_group_rule" "ec2_node_all_ingress_from_self" {
+  count             = var.account_decommissioned ? 0 : 1
   security_group_id = module.eks.node_security_group_id
   type              = "ingress"
   from_port         = 0
@@ -158,4 +167,3 @@ resource "aws_security_group_rule" "ec2_node_all_ingress_from_self" {
   self              = true
   description       = "Allow all ingress from EKS EC2 nodes to themselves"
 }
-

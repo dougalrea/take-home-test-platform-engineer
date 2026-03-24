@@ -42,6 +42,7 @@ locals {
 }
 
 module "eks_aws_auth_configmap" {
+  count   = local.account_decommissioned ? 0 : 1
   source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
   version = "~> 20.0"
 
@@ -71,5 +72,6 @@ module "eks_aws_auth_configmap" {
     local.eks_infrastructure_admin_aws_auth_configmap,
     local.eks_metaflow_role_aws_auth_configmap
   )
+  depends_on = [module.eks_cluster]
 }
 

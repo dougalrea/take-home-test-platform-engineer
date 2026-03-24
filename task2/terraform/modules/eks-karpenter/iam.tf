@@ -1,6 +1,7 @@
 # https://github.com/aws/karpenter-provider-aws/blob/main/website/content/en/docs/getting-started/getting-started-with-karpenter/cloudformation.yaml
 # % yq '.Resources.KarpenterControllerPolicy.Properties.PolicyDocument' ./cloudformation.yaml > policy.json
 resource "aws_iam_policy" "karpenter_controller_iam_role" {
+  count       = var.account_decommissioned ? 0 : 1
   name        = "KarpenterIAMPolicyV1"
   description = "IAM policy for the Karpenter application running in the ${var.eks_cluster_name} EKS cluster"
 
@@ -300,12 +301,14 @@ data "aws_iam_policy_document" "karpeneter_controller_iam_role_trust" {
 }
 
 resource "aws_iam_role" "karpenter_controller" {
+  count              = var.account_decommissioned ? 0 : 1
   name               = "karpenter"
   description        = "IAM role for the Karpenter application"
   assume_role_policy = data.aws_iam_policy_document.karpeneter_controller_iam_role_trust.json
 }
 
 resource "aws_iam_role_policy_attachment" "karpenter_controller" {
+  count      = var.account_decommissioned ? 0 : 1
   role       = aws_iam_role.karpenter_controller.name
   policy_arn = aws_iam_policy.karpenter_controller_iam_role.arn
 }

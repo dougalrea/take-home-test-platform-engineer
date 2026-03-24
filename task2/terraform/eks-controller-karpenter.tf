@@ -25,7 +25,8 @@ module "karpenter" {
     helm_release.load_balancer_controller,
     # this prevents us from removing the karpenter chart before it's fargate profile is removed
     module.eks_cluster.fargate_profiles,
-    module.eks_cluster.cluster_addons
+    module.eks_cluster.cluster_addons,
+    module.eks_cluster
   ]
 }
 
@@ -108,6 +109,10 @@ resource "kubectl_manifest" "karpenter_nodepool_default" {
         consolidationPolicy: WhenEmptyOrUnderutilized
         consolidateAfter: "${local.nodepool_default_consolidate_after_minutes}m"
   YAML
+
+  depends_on = [
+    module.karpenter.helm_release_karpenter_crd_id   # New output from eks-karpenter module
+  ]
 }
 
 resource "kubectl_manifest" "karpenter_nodepool_metaflow" {
@@ -159,6 +164,10 @@ resource "kubectl_manifest" "karpenter_nodepool_metaflow" {
         consolidationPolicy: WhenEmpty
         consolidateAfter: "${local.nodepool_metaflow_consolidate_after_minutes}m"
   YAML
+
+  depends_on = [
+    module.karpenter.helm_release_karpenter_crd_id
+  ]
 }
 
 resource "time_sleep" "wait_karpenter_nodepool_default" {
@@ -191,6 +200,7 @@ data "aws_eks_addon_version" "aws_guardduty_agent_default" {
 }
 
 resource "aws_eks_addon" "aws_guardduty_agent" {
+  count                       = local.account_decommissioned ? 0 : 1
   cluster_name                = module.eks_cluster.cluster_name
   addon_name                  = "aws-guardduty-agent"
   addon_version               = data.aws_eks_addon_version.aws_guardduty_agent_default.version

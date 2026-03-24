@@ -1,4 +1,5 @@
 resource "kubernetes_namespace" "aws_observability" {
+  count = var.account_decommissioned ? 0 : 1
   # Required for housing Fargate logging ConfigMaps.
   # https://docs.aws.amazon.com/eks/latest/userguide/fargate-logging.html
   # We cannot create a namespace in Helm with the appropriate labels:
@@ -60,6 +61,7 @@ resource "terraform_data" "cloudwatch_log_group_names" {
 }
 
 resource "kubectl_manifest" "aws_logging_configmap" {
+  count = var.account_decommissioned ? 0 : 1
   yaml_body = <<-YAML
     ---
       # Default configMap for aws-logging
