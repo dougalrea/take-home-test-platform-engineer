@@ -45,7 +45,7 @@ The account_state variable is defined at the partner account level and must be e
 - "pre-decommissioned"->  account_decommissioned = false  (NodePool consolidateAfter = 1m / 1m)
 - "decommissioned"    ->  account_decommissioned = true
 
-Intermediate state between commissioned and decomissioned is controlled via `pre-decommissioned` - in this state (and indeed any state besides `commissioned`) Karpenter nodes are consolidated (using consolidateAfter → 1 minute) so EC2 worker nodes drain before the Helm/CRD EKS resources are removed. The count gate that destroys resources when `account_decommissioned = true` only comes into effect when account_state is `decommissioned`.
+Intermediate state between commissioned and decomissioned is controlled via `pre-decommissioned` - in this state (and indeed any state besides `commissioned`) Karpenter nodes are consolidated (using consolidateAfter → 1 minute) so EC2 worker nodes consolidate rapidly before the Helm/CRD EKS resources are removed. The count gate that destroys resources when `account_decommissioned = true` only comes into effect when account_state is `decommissioned`. (Note - should pre-decommissioned state trigger scale down of worker nodes to 0? Appears not current behaviour)
 
 ### Gaps & bugs in decommissioning flow
 
